@@ -109,37 +109,72 @@ sections = [
     ]),
 ]
 
-user_responses = []  # To store the user's responses
+# Initialize skip_section_8_checkbox_value
+# This ensures it's defined even if Section 8 isn't rendered due to logic
+skip_section_8_checkbox_value = False
+
+# Use st.session_state to persist responses across reruns
+if 'user_responses' not in st.session_state:
+    st.session_state.user_responses = [None] * len(sections_data)
+if 'skip_section_8' not in st.session_state:
+    st.session_state.skip_section_8 = False
 
 # Loop through sections to create input options
-for idx, (title, options) in enumerate(sections):
+for idx, (title, options) in enumerate(sections_data):
     st.subheader(title)
-    
-    if idx < 7:  # For sections 1 to 7, display radio buttons
-        response = st.radio(title, options)
-        user_responses.append(options.index(response) if response else None)
-    elif idx == 7:  # For section 8, display radio buttons
-        response = st.radio(title, options)
-        user_responses.append(options.index(response) if response else None)
-        
-        # Add the checkbox to skip Section 8
-        skip_section_8 = st.checkbox("Skip Section 8", value=False)
-    else:  # For Section 9 and 10, display radio buttons
-        response = st.radio(title, options)
-        user_responses.append(options.index(response) if response else None)
 
-# After the loop, check if the user chose to skip Section 8 when calculating the score
+    # Place the "Skip Section 8" checkbox right before Section 8's options
+    if idx == 7:  # Section 8 is at index 7 (0-indexed)
+        st.session_state.skip_section_8 = st.checkbox("Skip Section 8 (性生活)", value=st.session_state.skip_section_8, key=f"skip_cb_{idx}")
+        # If Section 8 is skipped, set its response to None to prevent accidental scoring
+        if st.session_state.skip_section_8:
+            st.session_state.user_responses[idx] = None
+            # Disable radio buttons if skipped
+            selected_option = st.radio(f"{title}_radio", options, index=None, disabled=True, key=f"radio_{idx}")
+            # Ensure the state for this specific radio is also None if skipped
+            if selected_option is not None:
+                st.session_state.user_responses[idx] = None # Or handle differently if needed
+            continue # Skip rendering radio for this section if checkbox is checked
+
+    # Use a unique key for each radio button to prevent errors
+    # The index will be the previous selection if available in session_state
+    current_selection_index = None
+    if st.session_state.user_responses[idx] is not None:
+        current_selection_index = st.session_state.user_responses[idx]
+
+    selected_option = st.radio(f"{title}_radio", options, index=current_selection_index, key=f"radio_{idx}")
+
+    # Store the index of the selected option
+    if selected_option is not None:
+        st.session_state.user_responses[idx] = options.index(selected_option)
+    else:
+        st.session_state.user_responses[idx] = None
+
+# Update the global skip_section_8_checkbox_value for calculation
+skip_section_8_checkbox_value = st.session_state.skip_section_8
+
+# Button to calculate score
 if st.button("Calculate Score"):
-    total_score, odi_percentage = calculate_odds(user_responses, skip_section_8)
+    total_score, odi_percentage = calculate_odds(st.session_state.user_responses, skip_section_8_checkbox_value)
     if total_score is not None:  # Only display if valid score was calculated
         st.success(f"Total Score: {total_score}")
+        # Determine category based on ODI percentage
+        if odi_percentage <= 20:
+            level = "Minimal disability (0% - 20%)"
+        elif odi_percentage <= 40:
+            level = "Moderate disability (21% - 40%)"
+        elif odi_percentage <= 60:
+            level = "Severe disability (41% - 60%)"
+        elif odi_percentage <= 80:
+            level = "Crippled (61% - 80%)"
+        else:
+            level = "Bed-bound or exaggerating symptoms (81% - 100%)"
+
         st.success(f"ODI Percentage: {odi_percentage:.2f}%")
+        st.success(f"Category: {level}")
 
-# Clear all selections button
+# Button to clear all selections
 if st.button("Clear All Selections"):
-    user_responses = [None] * len(sections)  # Reset responses
+    st.session_state.user_responses = [None] * len(sections_data)  # Reset responses
+    st.session_state.skip_section_8 = False # Reset skip checkbox
     st.experimental_rerun()  # Rerun the app to reset input fields
-
-
-
-
