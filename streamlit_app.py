@@ -116,14 +116,14 @@ if 'user_responses' not in st.session_state:
     st.session_state.user_responses = [None] * len(sections_data)
 if 'skip_section_8' not in st.session_state:
     st.session_state.skip_section_8 = False
+    
 # Loop through sections to create input options
 for idx, (title, options) in enumerate(sections_data):
-    st.subheader(title)
+    st.subheader(title) # Display the title as a subheader
 
     # --- Handle "Skip Section 8" checkbox placement and logic ---
     # Section 8 is at index 7 (0-indexed)
     if idx == 7:
-        # Place the checkbox right above Section 8's radio buttons
         st.session_state.skip_section_8 = st.checkbox(
             "跳過第八部分 (性生活)",
             value=st.session_state.skip_section_8,
@@ -139,9 +139,10 @@ for idx, (title, options) in enumerate(sections_data):
         current_selected_index = st.session_state.user_responses[idx]
 
     # Render radio buttons for the current section
-    # `st.radio` returns the selected option's string value
+    # Use an empty string "" as the label for st.radio
+    # because the title is already displayed by st.subheader(title)
     selected_option_str = st.radio(
-        f"**{title}**", # Unique label for the radio group, using subheader text for clarity
+        "", # <--- Changed this from f"**{title}**" to ""
         options,
         index=current_selected_index, # Pre-select from session state if available
         disabled=is_current_section_8_and_skipped, # Disable if Section 8 is skipped
@@ -157,6 +158,7 @@ for idx, (title, options) in enumerate(sections_data):
     else:
         # If no option is selected (e.g., initial load), ensure it's None
         st.session_state.user_responses[idx] = None
+
 st.markdown("---") # Visual separator for clarity
 
 col1, col2 = st.columns(2) # Use columns to place buttons side-by-side
