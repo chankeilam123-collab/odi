@@ -90,29 +90,6 @@ sections = [
         "因為背痛，我幾乎沒有性生活。",
         "因為背痛，我完全沒有性生活。"
     ]),
-
-    user_responses = []  # To store the user's responses
-
-# Loop through sections to create input options
-for idx, (title, options) in enumerate(sections):
-    st.subheader(title)
-    
-    if idx < 7:  # For sections 1 to 7, display radio buttons
-        response = st.radio(title, options)
-        user_responses.append(options.index(response) if response else None)
-    elif idx == 7:  # For section 8, display radio buttons
-        response = st.radio(title, options)
-        user_responses.append(options.index(response) if response else None)
-        
-        # Add the checkbox to skip Section 8
-        skip_section_8 = st.checkbox("Skip Section 8", value=False)
-    else:  # For Section 9 and 10, display radio buttons
-        response = st.radio(title, options)
-        user_responses.append(options.index(response) if response else None)
-
-# After the loop, check if the user chose to skip Section 8 when calculating the score
-if st.button("Calculate Score"):
-
     
     ("第九部份：社交生活", [
         "我的社交生活正常而且不會更痛。",
