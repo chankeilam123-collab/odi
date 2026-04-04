@@ -1,6 +1,16 @@
 [theme]
-primaryColor="#F63366"
-backgroundColor="#FFFFFF"
-secondaryBackgroundColor="#F0F2F6"
-textColor="#262730"
-font="sans serif"
+# Primary font color
+textColor = "#000000"
+
+# Background color of the entire app
+backgroundColor = "#FFFFFF" 
+
+# Background color for elements like text inputs, select boxes
+secondaryBackgroundColor = "#31333F" # Example: Slightly lighter dark blue
+
+# Color for primary interactive elements (buttons, links, etc.)
+primaryColor = "#F63366" # Example: Pinkish-red
+
+# Font family for the app
+font = "sans serif" # "sans serif", "serif", or "monospace"
+
