@@ -82,21 +82,15 @@ sections = [
         "因為疼痛，睡眠時間少於 2小時。",
         "疼痛使我無法入睡。"
     ]),
-# Section 8: Sexual Life
-st.subheader("第八部份：性生活（如果有的話）")
-response = st.radio("第八部份：性生活（如果有的話）", [
-    "我的性生活正常而且不會增加背痛。",
-    "我的性生活正常但會增加背痛。",
-    "我的性生活幾乎正常但背部非常疼痛。",
-    "因為背痛，我的性生活受到嚴重限制。",
-    "因為背痛，我幾乎沒有性生活。",
-    "因為背痛，我完全沒有性生活。"
-])
-user_responses.append(options.index(response) if response else None)
+   ("第八部份：性生活（如果有的話）", [
+        "我的性生活正常而且不會增加背痛。",
+        "我的性生活正常但會增加背痛。",
+        "我的性生活幾乎正常但背部非常疼痛。",
+        "因為背痛，我的性生活受到嚴重限制。",
+        "因為背痛，我幾乎沒有性生活。",
+        "因為背痛，我完全沒有性生活。"
+    ]),
 
-# Checkbox for skipping Section 8, placed below Section 8
-skip_section_8 = st.checkbox("Skip Section 8", value=False)
-    
     ("第九部份：社交生活", [
         "我的社交生活正常而且不會更痛。",
         "我的社交生活正常但會增加疼痛的程度。",
