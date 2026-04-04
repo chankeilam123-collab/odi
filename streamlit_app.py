@@ -1,4 +1,69 @@
 import streamlit as st
+
+# --- Inject Custom CSS at the very beginning ---
+st.markdown("""
+    <style>
+    /* Global font size adjustments and spacing */
+
+    /* Main title (st.title) */
+    h1 {
+        font-size: 2.8em !important; /* Larger font for main title */
+        margin-bottom: 0.8em !important;
+    }
+
+    /* Introductory paragraph */
+    p {
+        font-size: 1.15em !important; /* Slightly larger text for general paragraphs */
+        line-height: 1.6 !important; /* Increase line spacing for readability */
+        margin-bottom: 1.5em !important; /* More space after paragraphs */
+    }
+
+    /* Section subheaders (st.subheader) */
+    h3 {
+        font-size: 1.6em !important; /* Larger font for section titles */
+        margin-top: 2.5em !important; /* More space before each new section heading */
+        margin-bottom: 0.8em !important; /* Small space after subheader, before options */
+    }
+
+    /* Streamlit radio button group container */
+    .stRadio {
+        margin-top: 0.5em !important; /* Small space between subheader and radio options */
+        margin-bottom: 2em !important; /* Significantly more space *after* each radio group to separate sections */
+    }
+
+    /* Individual radio button labels/options */
+    .stRadio label {
+        font-size: 1.1em !important; /* Larger font for radio options */
+        line-height: 1.8 !important; /* Increase line spacing for radio options */
+        margin-bottom: 0.5em !important; /* Space between individual radio options */
+    }
+
+    /* Specifically target the text within the radio options if the above isn't enough
+       (Streamlit's internal class names can change, so this might need adjustment) */
+    .stRadio div[data-testid="stForm"] > div > label > div { /* A more specific selector if needed */
+        font-size: 1.1em !important;
+    }
+
+    /* Make the checkbox for skipping section 8 a bit larger */
+    .stCheckbox label {
+        font-size: 1.1em !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Adjust button font size */
+    .stButton button {
+        font-size: 1.1em !important;
+        padding: 0.75em 1.5em !important; /* Increase button padding for better click area */
+    }
+
+    /* Adjust warning/success messages */
+    .stAlert {
+        font-size: 1.1em !important;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
 # Function to calculate the ODI score based on user input
 def calculate_odds(user_responses, is_section_8_skipped):
     total_score = 0
@@ -22,9 +87,11 @@ def calculate_odds(user_responses, is_section_8_skipped):
     odi_percentage = (total_score / max_possible) * 100 if max_possible > 0 else 0
 
     return total_score, odi_percentage
+
 # Streamlit User Interface
 st.title("Oswestry Disability Index (ODI)")
-st.markdown("請選擇每個部分中對您最合適的選項。您可以選擇跳過第八部分（性生活）。")
+st.markdown("請選擇每個部分中對您最合適的選項。您可以選擇跳過第八部分（性生活）。") # This markdown will now use the new 'p' styles
+
 # Section descriptions for parts 1 to 5
 sections_data = [
     ("第一部份：疼痛程度", [
@@ -53,7 +120,7 @@ sections_data = [
     ]),
     ("第四部份：走路", [
         "我不受疼痛阻礙，可以走任何距離。",
-        "疼痛使我無法走超過 1.6 公里。（大約 4圈大操場）",
+        "疼痛使我無法走超過 1.6 公 M。（大約 4圈大操場）",
         "疼痛使我無法走超過 400 公尺。（大約 1圈大操場）",
         "疼痛使我無法走超過 100 公尺。",
         "我只有依靠柺杖才能走。",
@@ -108,7 +175,7 @@ sections_data.extend([
         "我可以旅遊超過 2個小時，但疼痛令人不適。",
         "疼痛限制我只能從事少於 1個小時的旅程。",
         "疼痛限制我只能從事少於 30 分鐘必要的外出活動。",
-        "除了接受治療，疼痛讓我無法外出活動。"
+        "除嶺接受治療，疼痛讓我無法外出活動。"
     ]),
 ])
 # Initialize session state for user responses and skip flag
@@ -116,7 +183,6 @@ if 'user_responses' not in st.session_state:
     st.session_state.user_responses = [None] * len(sections_data)
 if 'skip_section_8' not in st.session_state:
     st.session_state.skip_section_8 = False
-    
 # Loop through sections to create input options
 for idx, (title, options) in enumerate(sections_data):
     st.subheader(title) # Display the title as a subheader
@@ -131,7 +197,7 @@ for idx, (title, options) in enumerate(sections_data):
         )
 
     # Determine if the current section's radio buttons should be disabled
-    is_current_section_8_and_skipped = (idx == 7 and st.session_state.skip_section_8)
+    is_current_section_8_and_skipped = (idx == 7 and st.session_state.skip_section_8) # Corrected variable name
 
     # Determine initial selection for the radio button from session state
     current_selected_index = None
@@ -142,7 +208,7 @@ for idx, (title, options) in enumerate(sections_data):
     # Use an empty string "" as the label for st.radio
     # because the title is already displayed by st.subheader(title)
     selected_option_str = st.radio(
-        "", # <--- Changed this from f"**{title}**" to ""
+        "", # <--- Empty label here
         options,
         index=current_selected_index, # Pre-select from session state if available
         disabled=is_current_section_8_and_skipped, # Disable if Section 8 is skipped
@@ -159,7 +225,7 @@ for idx, (title, options) in enumerate(sections_data):
         # If no option is selected (e.g., initial load), ensure it's None
         st.session_state.user_responses[idx] = None
 
-st.markdown("---") # Visual separator for clarity
+st.markdown("---") # Visual separator for clarity - this also gets some default margin
 
 col1, col2 = st.columns(2) # Use columns to place buttons side-by-side
 
@@ -167,7 +233,7 @@ with col1:
     if st.button("計算分數", key="calculate_button"):
         # Pass the user responses and the skip flag to the calculation function
         total_score, odi_percentage = calculate_odds(st.session_state.user_responses, st.session_state.skip_section_8)
-        
+
         if total_score is not None: # Only display if a valid score was returned (no incomplete sections)
             # Calculate the maximum possible score, adjusting for skipped Section 8 if applicable
             max_overall_score = len(sections_data) * 5
