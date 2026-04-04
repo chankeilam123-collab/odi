@@ -13,8 +13,8 @@ st.markdown("""
 
     /* Introductory paragraph */
     p {
-        font-size: 1.15em !important; /* Slightly larger text for general paragraphs */
-        line-height: 1.6 !important; /* Increase line spacing for readability */
+        font-size: 1.5em !important; /* Slightly larger text for general paragraphs */
+        line-height: 1.2 !important; /* Increase line spacing for readability */
         margin-bottom: 1.5em !important; /* More space after paragraphs */
     }
 
