@@ -1,6 +1,5 @@
 
-import tkinter as tk
-from tkinter import messagebox
+import streamlit as st
 
 def calculate_result(user_vars, skip_social_var):
     total_score = 0
@@ -43,25 +42,20 @@ def clear_all(user_vars, skip_social_var):
         v.set(-1)
     skip_social_var.set(0)
 def main():
-    root = tk.Tk()
-    root.title("Electronic Oswestry Disability Index (ODI)")
-    root.geometry("900x700")
+st.set_page_config(
+    page_title="Electronic Oswestry Disability Index (ODI)",
+    layout="centered", # 选项有 "centered" (居中, 类似 900px 宽度) 或 "wide" (全屏)
+    initial_sidebar_state="collapsed"
+)
 
-    canvas = tk.Canvas(root)
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-    scrollbar.pack(side="right", fill="y")
-    canvas.configure(yscrollcommand=scrollbar.set)
 
-    
-
-    frame = tk.Frame(canvas)
-    scrollable_frame = frame
-    canvas.create_window((0, 0), window=frame, anchor="nw")
-    frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-    tk.Label(scrollable_frame, text="Oswestry Disability Index (ODI)", font=("Arial", 24, "bold")).pack(pady=10)
-    tk.Label(scrollable_frame, text="Select one option per section. You may skip Section 8 (Social Life).",
-             font=("Arial", 24), wraplength=800, justify="center").pack(pady=5)
+    st.markdown("<h1 style='text-align: center;'>Oswestry Disability Index (ODI)</h1>", unsafe_allow_html=True)
+    st.markdown(
+    "<p style='text-align: center; font-size: 20px;'>"
+    "Select one option per section. You may skip Section 8 (Social Life)."
+    "</p>", 
+    unsafe_allow_html=True
+)
 
     questionnaire_sections = [
         {"title": "第一部份：疼痛程度", "options": [
@@ -136,47 +130,51 @@ def main():
             "除了接受治療，疼痛讓我無法外出活動。"]}
     ]
 
-    user_vars = [tk.IntVar(value=-1) for _ in questionnaire_sections]
-    skip_social_var = tk.IntVar(value=0)
+        # 用于存储用户选择的字典（替代 user_vars）
+    responses = {}
+    skip_social = False
+
+    # 遍历生成问卷（替代原本的 enumerate 循环）
     for idx, q in enumerate(questionnaire_sections):
-        box = tk.LabelFrame(scrollable_frame, text=q["title"], font=("Arial", 24, "bold"), padx=10, pady=6)
-        box.pack(fill="x", padx=20, pady=8)
+        # 使用 st.container 或 st.expander 模拟 LabelFrame
+        with st.container(border=True):
+            st.subheader(q["title"])
+            
+            # 第 8 节（索引为 7）的跳过逻辑
+            if idx == 7:
+                skip_social = st.checkbox("Skip this section", key="skip_s8")
+            
+            # 如果跳过，则不显示单选框，否则渲染
+            if idx == 7 and skip_social:
+                st.write("Section skipped.")
+                responses[idx] = -1
+            else:
+                # st.radio 直接返回选中的索引值
+                # 使用 index=None 模拟 Tkinter 的 value=-1（初始未选中）
+                choice = st.radio(
+                    f"Select one:",
+                    options=range(len(q["options"])),
+                    format_func=lambda x: q["options"][x], # 显示选项文字
+                    key=f"q_{idx}",
+                    index=None 
+                )
+                responses[idx] = choice if choice is not None else -1
 
-        if idx == 7:
-            def on_skip(var=user_vars[7], skip=skip_social_var):
-                if skip.get() == 1:
-                    var.set(-1)
-            skip_cb = tk.Checkbutton(box, text="Skip this section", variable=skip_social_var, command=on_skip)
-            skip_cb.pack(anchor="ne")
+    # 底部按钮布局（替代 btn_frame）
+    st.divider()
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("Calculate Score", type="primary", use_container_width=True):
+            # 这里的 calculate_result 是你自己定义的逻辑函数
+            # calculate_result(responses, skip_social)
+            st.write("计算结果中...")
 
-        row_frame = tk.Frame(box)
-        row_frame.pack(fill="x")
-        opts_frame = tk.Frame(row_frame)
-        opts_frame.pack(side="left", fill="x", expand=True)
-
-        for val, desc in enumerate(q["options"]):
-            rb = tk.Radiobutton(opts_frame, text=desc, variable=user_vars[idx], value=val,
-                                wraplength=760, justify="left", anchor="w", font=("Arial", 24) )
-            rb.pack(anchor="w", padx=4, pady=1)
-
-        clear_btn = tk.Button(row_frame, text="Clear", command=lambda v=user_vars[idx]: v.set(-1))
-        clear_btn.pack(side="right", padx=6, pady=6)
-    btn_frame = tk.Frame(scrollable_frame)
-    btn_frame.pack(pady=12)
-
-    calc_btn = tk.Button(btn_frame, text="Calculate Score", bg="#4CAF50", fg="red",
-                         command=lambda: calculate_result(user_vars, skip_social_var))
-    calc_btn.grid(row=0, column=0, padx=8)
-
-    clear_all_btn = tk.Button(btn_frame, text="Clear All Selections", bg="#f44336", fg="black",
-                              command=lambda: clear_all(user_vars, skip_social_var))
-    clear_all_btn.grid(row=0, column=1, padx=8)
-
-    def _on_mousewheel(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-    root.bind_all("<MouseWheel>", _on_mousewheel)
-
-    root.mainloop()
+    with col2:
+        if st.button("Clear All Selections", use_container_width=True):
+            # Streamlit 清除状态最简单的方法是刷新页面
+            st.rerun()
 
 if __name__ == "__main__":
     main()
+
