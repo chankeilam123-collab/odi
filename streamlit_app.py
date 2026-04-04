@@ -1,31 +1,32 @@
 import streamlit as st
-
-
 # Function to calculate the ODI score based on user input
-def calculate_odds(user_responses, skip_section_8):
+def calculate_odds(user_responses, is_section_8_skipped):
     total_score = 0
     answered_sections = 0
 
-    for i, response in enumerate(user_responses):
-        if i == 7 and skip_section_8:  # Skip Section 8
-            continue
-        if response is None:
+    for i, response_value in enumerate(user_responses):
+        # Section 8 is at index 7 (0-indexed)
+        if i == 7 and is_section_8_skipped:
+            continue # Don't count or check this section if it's skipped
+
+        if response_value is None:
+            # If an unskipped section is not answered, show a warning
             st.warning(f"Please answer Section {i + 1}.")
-            return None, None
-        total_score += response
+            return None, None # Indicate an incomplete questionnaire
+
+        total_score += response_value
         answered_sections += 1
 
     max_possible = answered_sections * 5
+    # Avoid division by zero if no sections are answered (shouldn't happen with warnings)
     odi_percentage = (total_score / max_possible) * 100 if max_possible > 0 else 0
 
     return total_score, odi_percentage
-
-
 # Streamlit User Interface
 st.title("Oswestry Disability Index (ODI)")
-
-# Section descriptions
-sections = [
+st.markdown("請選擇每個部分中對您最合適的選項。您可以選擇跳過第八部分（性生活）。")
+# Section descriptions for parts 1 to 5
+sections_data = [
     ("第一部份：疼痛程度", [
         "我現在不痛。",
         "我現在的疼痛非常輕微。",
@@ -45,7 +46,7 @@ sections = [
     ("第三部份：抬舉物品", [
         "我可以舉起重物，不會更痛。",
         "我可以舉起重物，但會更痛。",
-        "疼痛讓我無法從地面舉起重物，但如果放在方便的位置，我就可以。（例如：放在桌上）",
+        "疼痛讓我無法從地面舉起重物，但如果放在方聾的位置，我就可以。（例如：放在桌上）",
         "疼痛讓我無法舉起重物，但如果放在方聾的位置，我就可以舉起輕到中等重的東西。",
         "我只能舉起很輕的東西。",
         "我完全無法舉起或攜提任何東西。"
@@ -66,7 +67,10 @@ sections = [
         "疼痛使我無法坐超過 10 分鐘。",
         "疼痛使我無法坐著。"
     ]),
-    ("第六部份：站", [
+]
+# Section descriptions for parts 6 to 10
+sections_data.extend([
+    ("第六部份：站", [
         "我要站多久都可以，不會更痛。",
         "我要站多久都可以，但會更痛。",
         "疼痛使我無法站超過 1小時。",
@@ -82,7 +86,7 @@ sections = [
         "因為疼痛，睡眠時間少於 2小時。",
         "疼痛使我無法入睡。"
     ]),
-   ("第八部份：性生活（如果有的話）", [
+    ("第八部份：性生活（如果有的話）", [
         "我的性生活正常而且不會增加背痛。",
         "我的性生活正常但會增加背痛。",
         "我的性生活幾乎正常但背部非常疼痛。",
@@ -90,7 +94,6 @@ sections = [
         "因為背痛，我幾乎沒有性生活。",
         "因為背痛，我完全沒有性生活。"
     ]),
-
     ("第九部份：社交生活", [
         "我的社交生活正常而且不會更痛。",
         "我的社交生活正常但會增加疼痛的程度。",
@@ -107,74 +110,86 @@ sections = [
         "疼痛限制我只能從事少於 30 分鐘必要的外出活動。",
         "除了接受治療，疼痛讓我無法外出活動。"
     ]),
-]
-
-# Initialize skip_section_8_checkbox_value
-# This ensures it's defined even if Section 8 isn't rendered due to logic
-skip_section_8_checkbox_value = False
-
-# Use st.session_state to persist responses across reruns
+])
+# Initialize session state for user responses and skip flag
 if 'user_responses' not in st.session_state:
     st.session_state.user_responses = [None] * len(sections_data)
 if 'skip_section_8' not in st.session_state:
     st.session_state.skip_section_8 = False
-
 # Loop through sections to create input options
 for idx, (title, options) in enumerate(sections_data):
     st.subheader(title)
 
-    # Place the "Skip Section 8" checkbox right before Section 8's options
-    if idx == 7:  # Section 8 is at index 7 (0-indexed)
-        st.session_state.skip_section_8 = st.checkbox("Skip Section 8 (性生活)", value=st.session_state.skip_section_8, key=f"skip_cb_{idx}")
-        # If Section 8 is skipped, set its response to None to prevent accidental scoring
-        if st.session_state.skip_section_8:
-            st.session_state.user_responses[idx] = None
-            # Disable radio buttons if skipped
-            selected_option = st.radio(f"{title}_radio", options, index=None, disabled=True, key=f"radio_{idx}")
-            # Ensure the state for this specific radio is also None if skipped
-            if selected_option is not None:
-                st.session_state.user_responses[idx] = None # Or handle differently if needed
-            continue # Skip rendering radio for this section if checkbox is checked
+    # --- Handle "Skip Section 8" checkbox placement and logic ---
+    # Section 8 is at index 7 (0-indexed)
+    if idx == 7:
+        # Place the checkbox right above Section 8's radio buttons
+        st.session_state.skip_section_8 = st.checkbox(
+            "跳過第八部分 (性生活)",
+            value=st.session_state.skip_section_8,
+            key=f"skip_cb_{idx}" # Unique key for the checkbox
+        )
 
-    # Use a unique key for each radio button to prevent errors
-    # The index will be the previous selection if available in session_state
-    current_selection_index = None
+    # Determine if the current section's radio buttons should be disabled
+    is_current_section_8_and_skipped = (idx == 7 and st.session_state.skip_section_8)
+
+    # Determine initial selection for the radio button from session state
+    current_selected_index = None
     if st.session_state.user_responses[idx] is not None:
-        current_selection_index = st.session_state.user_responses[idx]
+        current_selected_index = st.session_state.user_responses[idx]
 
-    selected_option = st.radio(f"{title}_radio", options, index=current_selection_index, key=f"radio_{idx}")
+    # Render radio buttons for the current section
+    # `st.radio` returns the selected option's string value
+    selected_option_str = st.radio(
+        f"**{title}**", # Unique label for the radio group, using subheader text for clarity
+        options,
+        index=current_selected_index, # Pre-select from session state if available
+        disabled=is_current_section_8_and_skipped, # Disable if Section 8 is skipped
+        key=f"radio_{idx}" # Unique key for each radio group
+    )
 
-    # Store the index of the selected option
-    if selected_option is not None:
-        st.session_state.user_responses[idx] = options.index(selected_option)
+    # --- Update user responses in session state ---
+    if is_current_section_8_and_skipped:
+        st.session_state.user_responses[idx] = None # Ensure response is None if section is skipped
+    elif selected_option_str is not None:
+        # If an option is selected and the section is not skipped, store its index (score)
+        st.session_state.user_responses[idx] = options.index(selected_option_str)
     else:
+        # If no option is selected (e.g., initial load), ensure it's None
         st.session_state.user_responses[idx] = None
+st.markdown("---") # Visual separator for clarity
 
-# Update the global skip_section_8_checkbox_value for calculation
-skip_section_8_checkbox_value = st.session_state.skip_section_8
+col1, col2 = st.columns(2) # Use columns to place buttons side-by-side
 
-# Button to calculate score
-if st.button("Calculate Score"):
-    total_score, odi_percentage = calculate_odds(st.session_state.user_responses, skip_section_8_checkbox_value)
-    if total_score is not None:  # Only display if valid score was calculated
-        st.success(f"Total Score: {total_score}")
-        # Determine category based on ODI percentage
-        if odi_percentage <= 20:
-            level = "Minimal disability (0% - 20%)"
-        elif odi_percentage <= 40:
-            level = "Moderate disability (21% - 40%)"
-        elif odi_percentage <= 60:
-            level = "Severe disability (41% - 60%)"
-        elif odi_percentage <= 80:
-            level = "Crippled (61% - 80%)"
-        else:
-            level = "Bed-bound or exaggerating symptoms (81% - 100%)"
+with col1:
+    if st.button("計算分數", key="calculate_button"):
+        # Pass the user responses and the skip flag to the calculation function
+        total_score, odi_percentage = calculate_odds(st.session_state.user_responses, st.session_state.skip_section_8)
+        
+        if total_score is not None: # Only display if a valid score was returned (no incomplete sections)
+            # Calculate the maximum possible score, adjusting for skipped Section 8 if applicable
+            max_overall_score = len(sections_data) * 5
+            if st.session_state.skip_section_8:
+                max_overall_score -= 5 # Subtract 5 points if Section 8 was skipped
 
-        st.success(f"ODI Percentage: {odi_percentage:.2f}%")
-        st.success(f"Category: {level}")
+            st.success(f"總分: {total_score} / {max_overall_score}")
+            st.success(f"ODI 百分比: {odi_percentage:.2f}%")
 
-# Button to clear all selections
-if st.button("Clear All Selections"):
-    st.session_state.user_responses = [None] * len(sections_data)  # Reset responses
-    st.session_state.skip_section_8 = False # Reset skip checkbox
-    st.experimental_rerun()  # Rerun the app to reset input fields
+            # Determine category based on ODI percentage
+            if odi_percentage <= 20:
+                level = "輕微功能障礙 (0% - 20%)"
+            elif odi_percentage <= 40:
+                level = "中度功能障礙 (21% - 40%)"
+            elif odi_percentage <= 60:
+                level = "嚴重功能障礙 (41% - 60%)"
+            elif odi_percentage <= 80:
+                level = "癱瘓 (61% - 80%)"
+            else:
+                level = "臥床或誇大症狀 (81% - 100%)"
+            st.success(f"類別: {level}")
+
+with col2:
+    if st.button("清除所有選項", key="clear_button"):
+        st.session_state.user_responses = [None] * len(sections_data)  # Reset all responses to None
+        st.session_state.skip_section_8 = False # Also reset the skip checkbox state
+        st.experimental_rerun()  # Force a rerun to clear all input fields in the UI
