@@ -14,14 +14,14 @@ st.markdown("""
     /* Introductory paragraph */
     p {
         font-size: 1.5em !important; /* Slightly larger text for general paragraphs */
-        line-height: 1.2 !important; /* Increase line spacing for readability */
-        margin-bottom: 1.5em !important; /* More space after paragraphs */
+        line-height: 1.0 !important; /* Increase line spacing for readability */
+        margin-bottom: 1.2em !important; /* More space after paragraphs */
     }
 
     /* Section subheaders (st.subheader) */
     h3 {
         font-size: 1.6em !important; /* Larger font for section titles */
-        margin-top: 2.5em !important; /* More space before each new section heading */
+        margin-top: 2em !important; /* More space before each new section heading */
         margin-bottom: 0.8em !important; /* Small space after subheader, before options */
     }
 
