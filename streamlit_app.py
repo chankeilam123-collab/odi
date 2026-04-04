@@ -27,8 +27,8 @@ st.title("Oswestry Disability Index (ODI)")
 st.markdown("請選擇每個部分中對您最合適的選項。您可以選擇跳過第八部分（性生活）。")
 # Section descriptions for parts 1 to 5
 sections_data = [
-    ("##第一部份：疼痛程度##", [
-        "##我現在不痛。##",
+    ("第一部份：疼痛程度", [
+        "我現在不痛。",
         "我現在的疼痛非常輕微。",
         "我現在的疼痛中等程度。",
         "我現在的疼痛相當嚴重。",
