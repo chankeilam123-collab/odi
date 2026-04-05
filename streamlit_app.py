@@ -256,8 +256,11 @@ with col1:
                 level = "臥床或誇大症狀 (81% - 100%)"
             st.success(f"類別: {level}")
 
-with col2:
-    if st.button("清除所有選項", key="clear_button"):
+if st.button("清除所有選項", key="clear_button"):
+    try:
         st.session_state.user_responses = [None] * len(sections_data)  # Reset all responses to None
-        st.session_state.skip_section_8 = False # Also reset the skip checkbox state
+        st.session_state.skip_section_8 = False  # Also reset the skip checkbox state
         st.experimental_rerun()  # Force a rerun to clear all input fields in the UI
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")  # Display the error message in the app
+
