@@ -87,6 +87,7 @@ for idx, (title, options) in enumerate(sections_data):
         st.session_state.user_responses[idx] = options.index(selected_option_str)
     else:
         st.session_state.user_responses[idx] = None
+
 st.markdown("---") 
 
 col1, col2 = st.columns(2) 
@@ -117,9 +118,19 @@ with col1:
 
 with col2:
     if st.button("清除所有選項", key="clear_button"):
-        # Reset session states
+        # 1. Reset our custom state variables
         st.session_state.user_responses = [None] * len(sections_data)
         st.session_state.skip_section_8 = False
         
-        # Use st.rerun() instead of the deprecated st.experimental_rerun()
+        # 2. DELETE the internal widget keys so Streamlit forgets the selections
+        for idx in range(len(sections_data)):
+            radio_key = f"radio_{idx}"
+            if radio_key in st.session_state:
+                del st.session_state[radio_key]
+        
+        # Also delete the skip checkbox key
+        if "skip_cb_7" in st.session_state:
+            del st.session_state["skip_cb_7"]
+        
+        # 3. Force UI refresh
         st.rerun()
