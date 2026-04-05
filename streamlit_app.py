@@ -263,6 +263,7 @@ if st.session_state.get('clear_trigger', False):
     st.experimental_rerun()
 
 if st.button("清除所有選項", key="clear_button"):
-    st.session_state.clear_trigger = True  # Set trigger for clear action
-    st.stop()  # Stop execution to wait for rerun
+    st.session_state.user_responses = [None] * len(sections_data)  # Reset all responses to None
+    st.session_state.skip_section_8 = False  # Also reset the skip checkbox state
+    st.stop()  # This will stop further execution, effectively refreshing the UI.
 
