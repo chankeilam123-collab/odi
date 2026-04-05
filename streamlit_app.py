@@ -1,9 +1,8 @@
 import streamlit as st
 
-# --- Inject Custom CSS at the very beginning ---
+# --- Inject Custom CSS ---
 st.markdown("""
     <style>
-    /* Global font size adjustments and spacing */
     h1 { font-size: 2.8em !important; margin-bottom: 0.8em !important; }
     p { font-size: 1.5em !important; line-height: 1.0 !important; margin-bottom: 1.2em !important; }
     h3 { font-size: 1.6em !important; margin-top: 2em !important; margin-bottom: 0.8em !important; }
@@ -15,7 +14,7 @@ st.markdown("""
     .stAlert { font-size: 1.1em !important; }
     </style>
     """, unsafe_allow_html=True)
-# Function to calculate the ODI score based on user input
+# Function to calculate the ODI score
 def calculate_odds(user_responses, is_section_8_skipped):
     total_score = 0
     answered_sections = 0
@@ -35,7 +34,7 @@ def calculate_odds(user_responses, is_section_8_skipped):
     odi_percentage = (total_score / max_possible) * 100 if max_possible > 0 else 0
 
     return total_score, odi_percentage
-    # Streamlit User Interface
+# Streamlit User Interface
 st.title("Oswestry Disability Index (ODI)")
 st.markdown("請選擇每個部分中對您最合適的選項。您可以選擇跳過第八部分（性生活）。")
 
@@ -52,13 +51,15 @@ sections_data = [
     ("第九部份：社交生活", ["我的社交生活正常而且不會更痛。", "我的社交生活正常但會增加疼痛的程度。", "除了無法從事激烈運動外，身體疼痛對我的社交生活並無明顯影響。", "疼痛限制了我的社交生活，使我不常出門。", "疼痛使我的社交生活侷限在家裡。", "因為疼痛，我沒有社交生活。"]),
     ("第十部份：旅遊", ["我可以到處旅遊不會疼痛。", "我可以到處旅遊但會更痛。", "我可以旅遊超過 2個小時，但疼痛令人不適。", "疼痛限制我只能從事少於 1個小時的旅程。", "疼痛限制我只能從事少於 30 分鐘必要的外出活動。", "除嶺接受治療，疼痛讓我無法外出活動。"])
 ]
-# Initialize session state for user responses and skip flag
+# Initialize session states
 if 'user_responses' not in st.session_state:
     st.session_state.user_responses = [None] * len(sections_data)
 if 'skip_section_8' not in st.session_state:
     st.session_state.skip_section_8 = False
+if 'reset_counter' not in st.session_state:
+    st.session_state.reset_counter = 0  # <--- MAGIC KEY TRICK
 
-# Loop through sections to create input options
+# Loop through sections
 for idx, (title, options) in enumerate(sections_data):
     st.subheader(title) 
 
@@ -66,7 +67,7 @@ for idx, (title, options) in enumerate(sections_data):
         st.session_state.skip_section_8 = st.checkbox(
             "跳過第八部分 (性生活)",
             value=st.session_state.skip_section_8,
-            key=f"skip_cb_{idx}" 
+            key=f"skip_cb_{idx}_{st.session_state.reset_counter}"  # <--- Added counter to key
         )
 
     is_current_section_8_and_skipped = (idx == 7 and st.session_state.skip_section_8) 
@@ -75,9 +76,9 @@ for idx, (title, options) in enumerate(sections_data):
     selected_option_str = st.radio(
         "", 
         options,
-        index=st.session_state.user_responses[idx], # Set index directly from session state
+        index=st.session_state.user_responses[idx], 
         disabled=is_current_section_8_and_skipped, 
-        key=f"radio_{idx}" 
+        key=f"radio_{idx}_{st.session_state.reset_counter}" # <--- Added counter to key
     )
 
     # --- Update user responses in session state ---
@@ -87,7 +88,6 @@ for idx, (title, options) in enumerate(sections_data):
         st.session_state.user_responses[idx] = options.index(selected_option_str)
     else:
         st.session_state.user_responses[idx] = None
-
 st.markdown("---") 
 
 col1, col2 = st.columns(2) 
@@ -118,19 +118,11 @@ with col1:
 
 with col2:
     if st.button("清除所有選項", key="clear_button"):
-        # 1. Reset our custom state variables
+        # Reset lists and states
         st.session_state.user_responses = [None] * len(sections_data)
         st.session_state.skip_section_8 = False
         
-        # 2. DELETE the internal widget keys so Streamlit forgets the selections
-        for idx in range(len(sections_data)):
-            radio_key = f"radio_{idx}"
-            if radio_key in st.session_state:
-                del st.session_state[radio_key]
+        # Increase the counter! This instantly changes ALL widget keys so Streamlit forgets them.
+        st.session_state.reset_counter += 1 
         
-        # Also delete the skip checkbox key
-        if "skip_cb_7" in st.session_state:
-            del st.session_state["skip_cb_7"]
-        
-        # 3. Force UI refresh
         st.rerun()
