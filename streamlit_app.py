@@ -35,8 +35,8 @@ def calculate_odds(user_responses, is_section_8_skipped):
 
     return total_score, odi_percentage
 # Streamlit User Interface
-st.title("Oswestry Disability Index (ODI)")
-st.markdown("請選擇每個部分中對您最合適的選項。您可以選擇跳過第八項（性生活）。")
+st.title("Chinese Oswestry Disability Index")
+st.markdown("請填妥本問卷。這問卷有助我們了解腰痛(或腿痛)如何影響您的日常生活。請回答所有問題，每題請只選擇一個最能貼切描述您今天腰痛/腿痛情況的答案。")
 
 # Section descriptions
 sections_data = [
